@@ -3,6 +3,10 @@
 #include <dirent.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/ioctl.h>
+
+#define clear() printf("\033[H\033[J")
+#define gotoxy(x, y) printf("\033[%d;%dH", (x), (y))
 
 struct process
 {
@@ -86,8 +90,46 @@ int sizeFile(char *newpath)
     return count;
 }
 
+float getUptime()
+{
+
+    float uptime;
+    int tsize = sizeFile("/proc/uptime");
+    char tdata[tsize];
+    FILE *fp1 = fopen("/proc/uptime", "r");
+    if (fp1 == NULL)
+    {
+        printf("Error opening uptime file");
+    }
+    else
+    {
+        if (fgets(tdata, tsize, fp1) != NULL)
+        {
+            char input[tsize];
+            for (int i = 0; i < tsize; i++)
+            {
+                if (tdata[i] == ' ')
+                {
+                    break;
+                }
+                else
+                {
+                    input[i] = tdata[i];
+                }
+            }
+            uptime = strtod(input, NULL);
+            printf("the uptime is %f\n", uptime);
+        }
+    }
+    fclose(fp1);
+    return uptime;
+}
+
+
+
 int main(int argc, char *argv[])
 {
+
     //deal with args
     if (argc < 2)
     {
@@ -118,41 +160,42 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    // get the misc data that is needed
+    //get the static infomation
+    struct winsize wsize;
+    ioctl(STDOUT_FILENO, TIOCGWINSZ, &wsize);
+    printf("The terminal has %d rows and %d columns\n", wsize.ws_row, wsize.ws_col);
+
     long phys_pages = sysconf(_SC_PHYS_PAGES);
     long page_size = sysconf(_SC_PAGE_SIZE);
     long phys_mem_size = phys_pages * page_size;
     printf("page sizesize: %ld \n", page_size);
     printf("phys_mem_size: %ld \n", phys_mem_size);
-    float uptime;
-    int tsize = sizeFile("/proc/uptime");
-    char tdata[tsize];
-    FILE *fp1 = fopen("/proc/uptime", "r");
-    if (fp1 == NULL)
-    {
-        printf("Error opening uptime file");
-    }
-    else
-    {
-        if (fgets(tdata, tsize, fp1) != NULL)
-        {
-            char input[tsize];
-            for (int i = 0; i < tsize; i++)
-            {
-                if (tdata[i] == ' ')
-                {
-                    break;
-                }
-                else
-                {
-                    input[i] = tdata[i];
-                }
-            }
-            uptime = strtod(input, NULL);
-            printf("the uptime is %f\n", uptime);
-        }
-    }
-    fclose(fp1);
+
+    //the formatting  the terminal 
+        //set amount of space for the PID and state
+        int statl = 6;
+        int pidl = 10;
+
+        int space = wsize.ws_col;
+        space -=(statl + pidl+1);
+        //calc the rest based on the space advalible 
+        int cpuel = space/6;
+        int coml = space/6;
+        int cpul = space/6;
+        int meml = space/6;
+        int vszl = space/6;
+        int rssl = space/6;
+
+    //get the information that changes
+
+
+    float uptime = getUptime();
+
+    //header info
+    long int total_process =0;
+    long int running_processs =0;
+    float total_cpu =0;
+    //phys_mem_size
 
     DIR *dp;
     struct dirent *ep;
@@ -178,6 +221,7 @@ int main(int argc, char *argv[])
                 strcat(newpath, "/");
                 strcat(newpath, ep->d_name);
                 strcat(newpath, "/stat");
+                total_process++;
                 //printf("reading stats from %s \n", newpath);
                 //printf("\n");
 
@@ -232,6 +276,9 @@ int main(int argc, char *argv[])
                                     //char state;
                                     // printf("state = %s\n", input);
                                     list[cursor].state = input[0];
+                                    if(list[cursor].state == 'R'){
+                                        running_processs++;
+                                    }
                                     //printf("state = %c\n", list[cursor].state);
                                     break;
                                 case 13:
@@ -287,6 +334,7 @@ int main(int argc, char *argv[])
                                         {
                                             list[cursor].cpu = (float)(process_time * 100) / real_time;
                                         }
+                                        total_cpu += list[cursor].cpu;
                                     }
                                     break;
                                 }
@@ -306,7 +354,7 @@ int main(int argc, char *argv[])
 
                         cursor++;
 
-                        printf("\n");
+                        //printf("\n");
                     }
                 }
                 fclose(fp);
@@ -332,38 +380,48 @@ int main(int argc, char *argv[])
             qsort(list, cursor, sizeof(struct process), COMcomparator);
         }
 
-        //print the data
-        int pidl = 10;
-        int statl = 8;
-        int coml = 21;
-        int cpul = 10;
-        int meml = 10;
-        int vszl = 20;
-        int rssl = 20;
-        int cpuel = 10;
-
-        printf("%-*s", pidl, "PID ");
-        printf("%-*s", coml, " command ");
-        printf("%-*s", statl, "state");
-        printf("%-*s", cpul, "CPU ");
-        printf("%-*s", meml, "mem ");
-        printf("%-*s", vszl, "VSZ ");
-        printf("%-*s", rssl, "RSS ");
-        printf("%-*s", cpuel, "CPU_excuted");
+clear();
+        printf("%-*s", pidl, " PID ");
+        printf("%-*s", coml, " command");
+        printf("%-*s", statl," state");
+        printf("%-*s", cpul, " CPU ");
+        printf("%-*s", meml, " mem ");
+        printf("%-*s", vszl, " VSZ ");
+        printf("%-*s", rssl, " RSS ");
+        printf("%-*s", cpuel, " CPU_excuted");
         printf("\n");
-        for (int i = 0; i < cursor; i++)
-        {
+        //   printf("The terminal has %d rows and %d columns\n", wsize.ws_row, wsize.ws_col);
+        //gotoxy(x, y)
+        int i = 0;
+        for(int y =1; y< wsize.ws_row-2; y++){
+            gotoxy(y+2,0);
             printf("%-*ld", pidl, list[i].pid);
+            gotoxy(y+2,pidl+1);
+            printf(" ");
             printf("%-*s", coml, list[i].command);
+            gotoxy(y+2,pidl+coml+1);
+            printf(" ");
             printf("%-*c", statl, list[i].state);
+            gotoxy(y+2,pidl+coml+statl+1);
+            printf(" ");
             printf("%-*f", cpul, list[i].cpu);
+            gotoxy(y+2,pidl+coml+statl+cpul+1);
+            printf(" ");
             printf("%-*f", meml, list[i].mem);
+            gotoxy(y+2,pidl+coml+statl+cpul+meml+1);
+            printf(" ");
             printf("%-*ld", vszl, list[i].VSZ);
+            gotoxy(y+2,pidl+coml+statl+cpul+meml+vszl+1);
+            printf(" ");
             printf("%-*ld", rssl, list[i].RSS);
+            gotoxy(y+2,pidl+coml+statl+cpul+meml+vszl+rssl+1);
+            printf(" ");
             printf("%-*ld", cpuel, list[i].CPU_exc);
-            // printf("%s", list[i].command);
-            printf("\n");
+
         }
+            printf("\n");
+    
+
     }
     else
     {
