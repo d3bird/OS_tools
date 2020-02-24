@@ -189,7 +189,7 @@ int main(int argc, char *argv[])
 
     //get the information that changes
 
-
+    while(1){
     float uptime = getUptime();
 
     //header info
@@ -398,31 +398,34 @@ int main(int argc, char *argv[])
         
         //   printf("The terminal has %d rows and %d columns\n", wsize.ws_row, wsize.ws_col);
         //gotoxy(x, y)
-        int i = 0;
-        for(int y =1; y< wsize.ws_row-2; y++){
+        int loop = total_process;
+        if (loop>wsize.ws_row-2){
+            loop = wsize.ws_row-2;
+        }
+        for(int y =1; y< loop; y++){
             gotoxy(y+2,0);
-            printf("%-*ld", pidl, list[i].pid);
+            printf("%-*ld", pidl, list[y].pid);
             gotoxy(y+2,pidl+1);
             printf(" ");
-            printf("%-*s", coml, list[i].command);
+            printf("%-*s", coml, list[y].command);
             gotoxy(y+2,pidl+coml+1);
             printf(" ");
-            printf("%-*c", statl, list[i].state);
+            printf("%-*c", statl, list[y].state);
             gotoxy(y+2,pidl+coml+statl+1);
             printf(" ");
-            printf("%-*f", cpul, list[i].cpu);
+            printf("%-*f", cpul, list[y].cpu);
             gotoxy(y+2,pidl+coml+statl+cpul+1);
             printf(" ");
-            printf("%-*f", meml, list[i].mem);
+            printf("%-*f", meml, list[y].mem);
             gotoxy(y+2,pidl+coml+statl+cpul+meml+1);
             printf(" ");
-            printf("%-*ld", vszl, list[i].VSZ);
+            printf("%-*ld", vszl, list[y].VSZ);
             gotoxy(y+2,pidl+coml+statl+cpul+meml+vszl+1);
             printf(" ");
-            printf("%-*ld", rssl, list[i].RSS);
+            printf("%-*ld", rssl, list[y].RSS);
             gotoxy(y+2,pidl+coml+statl+cpul+meml+vszl+rssl+1);
             printf(" ");
-            printf("%-*ld", cpuel, list[i].CPU_exc);
+            printf("%-*ld", cpuel, list[y].CPU_exc);
 
         }
             printf("\n");
@@ -433,6 +436,8 @@ int main(int argc, char *argv[])
     {
         perror("Couldn't open the directory");
         exit(-1);
+    }
+    sleep(1);
     }
     return 0;
 }

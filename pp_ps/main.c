@@ -3,6 +3,7 @@
 #include <dirent.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/ioctl.h>
 
 struct process
 {
@@ -124,6 +125,25 @@ int main(int argc, char *argv[])
     long phys_mem_size = phys_pages * page_size;
     printf("page sizesize: %ld \n", page_size);
     printf("phys_mem_size: %ld \n", phys_mem_size);
+
+    struct winsize wsize;
+    ioctl(STDOUT_FILENO, TIOCGWINSZ, &wsize);
+        //the formatting  the terminal 
+        //set amount of space for the PID and state
+        int statl = 6;
+        int pidl = 10;
+
+        int space = wsize.ws_col;
+        space -=(statl + pidl+1);
+        //calc the rest based on the space advalible 
+        int cpuel = space/6;
+        int coml = space/6;
+        int cpul = space/6;
+        int meml = space/6;
+        int vszl = space/6;
+        int rssl = space/6;
+
+
     float uptime;
     int tsize = sizeFile("/proc/uptime");
     char tdata[tsize];
@@ -205,6 +225,8 @@ int main(int argc, char *argv[])
                         int done = 0;
                         for (int i = 0; i < size + 1; i++)
                         {
+
+                            
                             if (data[i] == ' ')
                             {
                                 //printf("%s\n",input);
@@ -291,7 +313,7 @@ int main(int argc, char *argv[])
                                     break;
                                 }
                                 num_spaces++;
-                                memset(input, 0, sizeof 100);
+                                memset(input, 0,  100);
                                 if (done == 1)
                                 {
                                     break;
@@ -306,7 +328,7 @@ int main(int argc, char *argv[])
 
                         cursor++;
 
-                        printf("\n");
+                        //printf("\n");
                     }
                 }
                 fclose(fp);
@@ -333,14 +355,6 @@ int main(int argc, char *argv[])
         }
 
         //print the data
-        int pidl = 10;
-        int statl = 8;
-        int coml = 21;
-        int cpul = 10;
-        int meml = 10;
-        int vszl = 20;
-        int rssl = 20;
-        int cpuel = 10;
 
         printf("%-*s", pidl, "PID ");
         printf("%-*s", coml, " command ");
