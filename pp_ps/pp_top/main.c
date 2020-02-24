@@ -168,6 +168,7 @@ int main(int argc, char *argv[])
     long phys_pages = sysconf(_SC_PHYS_PAGES);
     long page_size = sysconf(_SC_PAGE_SIZE);
     long phys_mem_size = phys_pages * page_size;
+    long total_mem =0;
     printf("page sizesize: %ld \n", page_size);
     printf("phys_mem_size: %ld \n", phys_mem_size);
 
@@ -322,6 +323,7 @@ int main(int argc, char *argv[])
                                         done = 1;
                                         //calculate the memory
                                         list[cursor].mem = (float)(list[cursor].RSS * page_size * 100) / phys_mem_size;
+                                        total_mem +=list[cursor].mem; 
                                         // list[cursor].mem =0;
                                         //calculate the cpu
                                         long process_time = (list[cursor].utime / sysconf(_SC_CLK_TCK)) + (list[cursor].stime / sysconf(_SC_CLK_TCK));
@@ -380,7 +382,11 @@ int main(int argc, char *argv[])
             qsort(list, cursor, sizeof(struct process), COMcomparator);
         }
 
-clear();
+        clear();
+
+        printf("%ld total no. of process | %ld running process | %ld physical memory | %ld mem used | %f cpu used",total_process, running_processs, phys_mem_size,total_mem, total_cpu);
+
+        printf("\n");
         printf("%-*s", pidl, " PID ");
         printf("%-*s", coml, " command");
         printf("%-*s", statl," state");
@@ -389,7 +395,7 @@ clear();
         printf("%-*s", vszl, " VSZ ");
         printf("%-*s", rssl, " RSS ");
         printf("%-*s", cpuel, " CPU_excuted");
-        printf("\n");
+        
         //   printf("The terminal has %d rows and %d columns\n", wsize.ws_row, wsize.ws_col);
         //gotoxy(x, y)
         int i = 0;

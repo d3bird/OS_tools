@@ -1,11 +1,11 @@
 
 
 all: main.o
-	gcc main.o -o output
+	gcc main.o -o pp_ps
 
 main.o: main.c
 	gcc -c main.c
 
 clean:
 	rm main.o
-	rm output
+	rm pp_ps
