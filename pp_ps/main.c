@@ -297,9 +297,9 @@ int main(int argc, char *argv[])
                                         done = 1;
                                         //calculate the memory
                                         list[cursor].mem = (float)(list[cursor].RSS * page_size * 100) / phys_mem_size;
-                                        // list[cursor].mem =0;
+
                                         //calculate the cpu
-                                        long process_time = (list[cursor].utime / sysconf(_SC_CLK_TCK)) + (list[cursor].stime / sysconf(_SC_CLK_TCK));
+                                        /*long process_time = (list[cursor].utime / sysconf(_SC_CLK_TCK)) + (list[cursor].stime / sysconf(_SC_CLK_TCK));
                                         long real_time = uptime - (list[cursor].starttime / sysconf(_SC_CLK_TCK));
                                         if (real_time == 0)
                                         {
@@ -308,7 +308,12 @@ int main(int argc, char *argv[])
                                         else
                                         {
                                             list[cursor].cpu = (float)(process_time * 100) / real_time;
-                                        }
+                                        }*/
+
+                                        float process_time =   ( list[cursor].utime / sysconf(_SC_CLK_TCK) ) + ( list[cursor].stime/ sysconf(_SC_CLK_TCK) );
+                                        float real_time = uptime -( list[cursor].starttime / sysconf(_SC_CLK_TCK) );
+                                       
+                                        list[cursor].cpu= process_time * 100 / real_time;
                                     }
                                     break;
                                 }
