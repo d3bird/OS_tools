@@ -163,18 +163,18 @@ int main(int argc, char *argv[])
     //get the static infomation
     struct winsize wsize;
     ioctl(STDOUT_FILENO, TIOCGWINSZ, &wsize);
-    printf("The terminal has %d rows and %d columns\n", wsize.ws_row, wsize.ws_col);
+   // printf("The terminal has %d rows and %d columns\n", wsize.ws_row, wsize.ws_col);
 
     long phys_pages = sysconf(_SC_PHYS_PAGES);
     long page_size = sysconf(_SC_PAGE_SIZE);
     long phys_mem_size = phys_pages * page_size;
     long total_mem =0;
-    printf("page sizesize: %ld \n", page_size);
-    printf("phys_mem_size: %ld \n", phys_mem_size);
+    //printf("page sizesize: %ld \n", page_size);
+    //printf("phys_mem_size: %ld \n", phys_mem_size);
 
     //the formatting  the terminal 
         //set amount of space for the PID and state
-        int statl = 6;
+        int statl = 10;
         int pidl = 10;
 
         int space = wsize.ws_col;
@@ -248,8 +248,17 @@ int main(int argc, char *argv[])
                         int num_spaces = 0;
                         int index = 0;
                         int done = 0;
+                        int flag =0;
                         for (int i = 0; i < size + 1; i++)
                         {
+
+                            //check to makesure that it is not inside the () when determining name
+                            if(data[i] == '(' && num_spaces ==1){
+                                flag =1;
+                            } else if(data[i] == ')' && num_spaces ==1){
+                                flag =0;
+                            }
+
                             if (data[i] == ' ')
                             {
                                 //printf("%s\n",input);
@@ -324,24 +333,17 @@ int main(int argc, char *argv[])
                                         //calculate the memory
                                         list[cursor].mem = (float)(list[cursor].RSS * page_size * 100) / phys_mem_size;
                                         total_mem +=list[cursor].mem; 
-                                        // list[cursor].mem =0;
                                         //calculate the cpu
-                                        long process_time = (list[cursor].utime / sysconf(_SC_CLK_TCK)) + (list[cursor].stime / sysconf(_SC_CLK_TCK));
-                                        long real_time = uptime - (list[cursor].starttime / sysconf(_SC_CLK_TCK));
-                                        if (real_time == 0)
-                                        {
-                                            list[cursor].cpu = 0;
-                                        }
-                                        else
-                                        {
-                                            list[cursor].cpu = (float)(process_time * 100) / real_time;
-                                        }
+                                        float process_time =   ( list[cursor].utime / sysconf(_SC_CLK_TCK) ) + ( list[cursor].stime/ sysconf(_SC_CLK_TCK) );
+                                        float real_time = uptime -( list[cursor].starttime / sysconf(_SC_CLK_TCK) );
+                                       
+                                        list[cursor].cpu= process_time * 100 / real_time;
                                         total_cpu += list[cursor].cpu;
                                     }
                                     break;
                                 }
                                 num_spaces++;
-                                memset(input, 0, sizeof 100);
+                                memset(input, 0,  100);
                                 if (done == 1)
                                 {
                                     break;
@@ -425,7 +427,7 @@ int main(int argc, char *argv[])
             printf("%-*ld", rssl, list[y].RSS);
             gotoxy(y+2,pidl+coml+statl+cpul+meml+vszl+rssl+1);
             printf(" ");
-            printf("%-*ld", cpuel, list[y].CPU_exc);
+            printf("%-*d", cpuel, list[y].CPU_exc);
 
         }
             printf("\n");
@@ -437,6 +439,7 @@ int main(int argc, char *argv[])
         perror("Couldn't open the directory");
         exit(-1);
     }
+    
     sleep(1);
     }
     return 0;

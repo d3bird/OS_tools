@@ -123,14 +123,14 @@ int main(int argc, char *argv[])
     long phys_pages = sysconf(_SC_PHYS_PAGES);
     long page_size = sysconf(_SC_PAGE_SIZE);
     long phys_mem_size = phys_pages * page_size;
-    printf("page sizesize: %ld \n", page_size);
-    printf("phys_mem_size: %ld \n", phys_mem_size);
+   // printf("page sizesize: %ld \n", page_size);
+   // printf("phys_mem_size: %ld \n", phys_mem_size);
 
     struct winsize wsize;
     ioctl(STDOUT_FILENO, TIOCGWINSZ, &wsize);
         //the formatting  the terminal 
         //set amount of space for the PID and state
-        int statl = 6;
+        int statl = 10;
         int pidl = 10;
 
         int space = wsize.ws_col;
@@ -169,7 +169,7 @@ int main(int argc, char *argv[])
                 }
             }
             uptime = strtod(input, NULL);
-            printf("the uptime is %f\n", uptime);
+            //printf("the uptime is %f\n", uptime);
         }
     }
     fclose(fp1);
@@ -199,9 +199,6 @@ int main(int argc, char *argv[])
                 strcat(newpath, ep->d_name);
                 strcat(newpath, "/stat");
                 //printf("reading stats from %s \n", newpath);
-                //printf("\n");
-
-                //printf("the file is %d chars\n", sizeFile(newpath));
 
                 int size = sizeFile(newpath);
                 char data[size];
@@ -223,16 +220,22 @@ int main(int argc, char *argv[])
                         int num_spaces = 0;
                         int index = 0;
                         int done = 0;
+                        int flag =0;
                         for (int i = 0; i < size + 1; i++)
                         {
-
+                            //check to makesure that it is not inside the () when determining name
+                            if(data[i] == '(' && num_spaces ==1){
+                                flag =1;
+                            } else if(data[i] == ')' && num_spaces ==1){
+                                flag =0;
+                            }
                             
-                            if (data[i] == ' ')
+                            if (data[i] == ' ' && flag ==0)
                             {
                                 //printf("%s\n",input);
 
                                 index = 0;
-
+                                //parse out the data based off the spaces
                                 switch (num_spaces)
                                 {
                                 case 0:
@@ -299,17 +302,6 @@ int main(int argc, char *argv[])
                                         list[cursor].mem = (float)(list[cursor].RSS * page_size * 100) / phys_mem_size;
 
                                         //calculate the cpu
-                                        /*long process_time = (list[cursor].utime / sysconf(_SC_CLK_TCK)) + (list[cursor].stime / sysconf(_SC_CLK_TCK));
-                                        long real_time = uptime - (list[cursor].starttime / sysconf(_SC_CLK_TCK));
-                                        if (real_time == 0)
-                                        {
-                                            list[cursor].cpu = 0;
-                                        }
-                                        else
-                                        {
-                                            list[cursor].cpu = (float)(process_time * 100) / real_time;
-                                        }*/
-
                                         float process_time =   ( list[cursor].utime / sysconf(_SC_CLK_TCK) ) + ( list[cursor].stime/ sysconf(_SC_CLK_TCK) );
                                         float real_time = uptime -( list[cursor].starttime / sysconf(_SC_CLK_TCK) );
                                        
@@ -333,7 +325,6 @@ int main(int argc, char *argv[])
 
                         cursor++;
 
-                        //printf("\n");
                     }
                 }
                 fclose(fp);
